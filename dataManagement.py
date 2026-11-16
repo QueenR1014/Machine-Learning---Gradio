@@ -8,7 +8,6 @@ from sklearn.preprocessing import MinMaxScaler, StandardScaler
 
 SPLIT_SEED = 2026
 
-
 # Estructura de datos que se inicializa al cargar los datos
 # Mantiene el mismo TrainTestSplit para todos los modelos 
 class TrainingData(self):
@@ -47,5 +46,5 @@ class TrainingData(self):
                 random_state= SPLIT_SEED,
                 test_size= TEST_SIZE
                 )
-
+        
 
