@@ -1,7 +1,6 @@
 from pathlib import Path
 
 import pandas as pd
-import numpy as np
 
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
@@ -10,7 +9,7 @@ SPLIT_SEED = 2026
 
 # Estructura de datos que se inicializa al cargar los datos
 # Mantiene el mismo TrainTestSplit para todos los modelos 
-class TrainingData(self):
+class TrainingData():
 
     def __init__(self, DATA_ROUTE: str, sheet=None):
 
@@ -19,6 +18,7 @@ class TrainingData(self):
         if not file_path.is_file():
             raise FileNotFoundError(f"File not found: {file_path}")
 
+        # Lectura del archivo (solo admite xlsx o csv)
         ext = file_path.suffix.lower()
         if ext == ".csv":
             self.data = pd.read_csv(DATA_ROUTE)   
