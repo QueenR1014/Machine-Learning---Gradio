@@ -29,7 +29,12 @@ DATA_STRUCTURE = TrainingData(DATA_ROUTE=DATA_ROUTE)
 ##################### ESCALADO DE VARIABLES #####################
 DATA_STRUCTURE.scale_data(scaler_type="")
 ####################### TRAIN-TEST SPLIT ######################## 
-DATA_STRUCTURE.make_split(DESCRIPTIVE=DESCRIPTIVE, OBJECTIVE=OBJECTIVE,TEST_SIZE=TEST_SIZE)
+DATA_STRUCTURE.make_split(
+    DESCRIPTIVE=DESCRIPTIVE, 
+    OBJECTIVE=OBJECTIVE,
+    TEST_SIZE=TEST_SIZE,
+    objective_type=objective_type
+    )
 
 if objective_type == "classification":
     run_classifications()

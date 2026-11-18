@@ -32,25 +32,27 @@ class TrainingData():
         self.y_train = None 
         self.y_test = None 
 
+        # Tipo de columnas
+        self.numeric_cols = []
+        self.cathegoric_cols = []
+
         # Atributos de escalado
         self.scaler = None
-        self.numeric_cols = []
         self.X_train_scaled = None
         self.X_test_scaled = None
 
     # Recibe dos listas en donde una son los nombres de las columnas descriptivas y la otra de las columnas objetivo
-    def make_split(self,DESCRIPTIVE: list, OBJECTIVE: list, TEST_SIZE: float):
-
+    def make_split(
+    self, DESCRIPTIVE: list, OBJECTIVE: list, TEST_SIZE: float, objective_type: str):
         X = self.data[DESCRIPTIVE]
         y = self.data[OBJECTIVE]
 
+        # Asigna None cuando el objetivo es regresión
+        stratify_param = None if objective_type.strip().lower() == "regression" else y
+
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
-                X,
-                y,
-                stratify=y,
-                random_state= SPLIT_SEED,
-                test_size= TEST_SIZE
-                )
+            X, y, stratify=stratify_param, random_state=SPLIT_SEED, test_size=TEST_SIZE
+        )
 
     # Escala las variables numéricas de X_train y X_test.
     # type: "std" (StandardScaler) o "minmax" (MinMaxScaler)
@@ -82,3 +84,5 @@ class TrainingData():
             self.X_train_scaled[num_cols] = self.scaler.fit_transform(self.X_train[num_cols])
             self.X_test_scaled[num_cols] = self.scaler.transform(self.X_test[num_cols])
 
+    def cathegorize_data(self):
+        pass
