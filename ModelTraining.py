@@ -26,10 +26,10 @@ model_parameters = None
 
 ####### CREACIÓN ESTRUCTURA DE DATOS PARA TODOS LOS MODELOS #####
 DATA_STRUCTURE = TrainingData(DATA_ROUTE=DATA_ROUTE)
+##################### ESCALADO DE VARIABLES #####################
+DATA_STRUCTURE.scale_data(scaler_type="")
+####################### TRAIN-TEST SPLIT ######################## 
 DATA_STRUCTURE.make_split(DESCRIPTIVE=DESCRIPTIVE, OBJECTIVE=OBJECTIVE,TEST_SIZE=TEST_SIZE)
-
-
-
 
 if objective_type == "classification":
     run_classifications()
