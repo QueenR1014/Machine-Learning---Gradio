@@ -1,8 +1,8 @@
 # Módulo place holder para la verdadera apliación con gradio
 
 # Modelos de clasificación
-from models.classificationModels import LogClassification
-from models.regressionModels import LinReg
+from models.classificationModels import run_classifications
+from models.regressionModels import run_regression
 
 # Módulo de estructura de datos
 from dataManagement import TrainingData
@@ -20,4 +20,14 @@ TEST_SIZE = 0.2
 
 ####### CREACIÓN ESTRUCTURA DE DATOS PARA TODOS LOS MODELOS #####
 DATA_STRUCTURE = TrainingData(DATA_ROUTE=DATA_ROUTE)
+DATA_STRUCTURE.make_split()
 
+# Tipo de variable objetivo
+objective_type = "classification"
+
+if objective_type == "classification":
+    run_classifications()
+elif objective_type == "regression":
+    run_regression()
+else:
+    raise ValueError(f"Non valid objective type: {objective_type}")
