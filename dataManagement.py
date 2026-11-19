@@ -3,7 +3,7 @@ from pathlib import Path
 import pandas as pd
 
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import MinMaxScaler, StandardScaler
+from sklearn.preprocessing import MinMaxScaler, StandardScaler, OneHotEncoder, LabelEncoder
 
 SPLIT_SEED = 2026
 
@@ -34,13 +34,18 @@ class TrainingData():
 
         # Tipo de columnas
         self.numeric_cols = []
-        self.cathegoric_cols = []
+        self.categorical_cols = []
 
         # Atributos de escalado
         self.scaler = None
         self.X_train_scaled = None
         self.X_test_scaled = None
 
+        # Atributos de categorización
+        self.enconder = None
+        self.label_encoder = None
+
+        
     # Recibe dos listas en donde una son los nombres de las columnas descriptivas y la otra de las columnas objetivo
     def make_split(
     self, DESCRIPTIVE: list, OBJECTIVE: list, TEST_SIZE: float, objective_type: str):
