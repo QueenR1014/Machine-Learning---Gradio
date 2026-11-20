@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import pandas as pd
+import json
 
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler, StandardScaler, OneHotEncoder, LabelEncoder
@@ -91,3 +92,7 @@ class TrainingData():
 
     def cathegorize_data(self):
         pass
+
+def load_params():
+    with open("model_cfg.json", "r", encoding="utf-8") as file:
+        return json.load(file)

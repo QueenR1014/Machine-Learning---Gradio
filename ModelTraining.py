@@ -5,7 +5,7 @@ from models.classificationModels import run_classifications
 from models.regressionModels import run_regression
 
 # Módulo de estructura de datos
-from dataManagement import TrainingData
+from models.dataManagement import TrainingData
 
 # Las siguientes variables deberían ser atrapadas por la aplicación cuando el usuario las ingrese
 # 1. La ruta de los datos 
