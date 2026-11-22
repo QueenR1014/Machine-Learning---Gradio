@@ -1,0 +1,4 @@
+Modelo,Accuracy,Recall,Specificity,Precision,F1
+Regresión logística,0.9,0.729,0.958,0.857,0.788
+Random Forest,0.896,0.718,0.957,0.851,0.779
+Red neuronal,0.898,0.745,0.95,0.837,0.788

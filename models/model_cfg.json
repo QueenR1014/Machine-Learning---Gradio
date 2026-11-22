@@ -9,9 +9,9 @@
       "random_state": 2026
     },
     "RandomForest": {
-      "n_estimators": 50,
+      "n_estimators": 200,
       "criterion": "gini",
-      "max_depth": 4,
+      "max_depth": null,
       "min_samples_split": 2,
       "min_samples_leaf": 1,
       "max_features": "sqrt",
@@ -26,7 +26,7 @@
       "alpha": 0.0001,
       "batch_size": "auto",
       "learning_rate_init": 0.001,
-      "max_iter": 100,
+      "max_iter": 1000,
       "early_stopping": false,
       "random_state": 2026
     }
@@ -51,7 +51,7 @@
       "alpha": 0.0001,
       "batch_size": "auto",
       "learning_rate_init": 0.001,
-      "max_iter": 100,
+      "max_iter": 2000,
       "early_stopping": false,
       "random_state": 2026
     }

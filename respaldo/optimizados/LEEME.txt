@@ -1,0 +1,2 @@
+Copia de resultados/ hecha el 2026-11-22 10:32.
+Modelos entrenados con optimize=True (busqueda de hiperparametros, ~2 h). Entrenamiento del 2026-11-22, 05:11 (clasificacion) y 06:04 (regresion).

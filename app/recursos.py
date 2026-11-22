@@ -34,7 +34,7 @@ class Recursos:
     def __init__(self):
         if not modelos_listos():
             raise RuntimeError("No hay modelos entrenados en resultados/. "
-                               "Ejecuta primero: python -m training.training")
+                               "Ejecuta primero: python entrenar.py")
 
         # Importar aquí: cargan TensorFlow
         from models.classificationModels import NOMBRES as NOMBRES_CLF
