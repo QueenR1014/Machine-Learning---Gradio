@@ -39,13 +39,13 @@ def construir_estructura(objective_type: str = "classification", ruta=RUTA_LIMPI
 
 
 def train_all_models(ruta=RUTA_LIMPIOS, test_size: float = TEST_SIZE, desde_crudos: bool = False,
-                     optimize: bool = False) -> dict:
+                     optimize: bool = True) -> dict:
     """
     Entrena todos los modelos (clasificación y regresión) y exporta los resultados a resultados/.
     - ruta: datos limpios (por defecto data/datos_limpios.csv).
     - desde_crudos=True: primero limpia data/datos_crudos.csv y sobrescribe datos_limpios.csv.
-    - optimize=False (por defecto): parámetros de model_cfg.json.
-      optimize=True: búsqueda de hiperparámetros (solo cuando el usuario modifica los parámetros).
+    - optimize=False: parámetros de model_cfg.json.
+      optimize=True (por defecto): búsqueda de hiperparámetros.
     Retorna {"clasificacion": tabla de métricas, "regresion": tabla de métricas}.
     """
     if desde_crudos:
