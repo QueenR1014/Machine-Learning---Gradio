@@ -1,0 +1,296 @@
+{
+  "_info": "Opciones que la app puede modificar. 'default' es el valor con el que se reinicia model_cfg.json al iniciar la app. Los parámetros con 'editable': false se copian tal cual (el modelo no los usa con optimize=False o no se exponen al usuario). 'ui_default' (opcional) es el valor inicial del control en la app cuando el default es muy lento para entrenar en vivo; no afecta model_cfg.json.",
+  "test_size": {
+    "label": "Proporción de prueba",
+    "type": "float",
+    "default": 0.2,
+    "min": 0.1,
+    "max": 0.5,
+    "step": 0.05,
+    "editable": true
+  },
+  "classification": {
+    "LogReg": {
+      "C": {
+        "label": "C (inverso de la regularización)",
+        "type": "float",
+        "default": 1.0,
+        "min": 0.001,
+        "max": 100.0,
+        "editable": true
+      },
+      "solver": {
+        "label": "Solver",
+        "type": "choice",
+        "default": "lbfgs",
+        "choices": ["lbfgs", "liblinear", "newton-cg", "sag", "saga"],
+        "editable": true
+      },
+      "max_iter": {
+        "label": "Máximo de iteraciones",
+        "type": "int",
+        "default": 1000,
+        "min": 100,
+        "max": 5000,
+        "step": 100,
+        "editable": true
+      },
+      "class_weight": {
+        "type": "fixed",
+        "default": null,
+        "editable": false
+      },
+      "random_state": {
+        "type": "fixed",
+        "default": 2026,
+        "editable": false
+      }
+    },
+    "RandomForest": {
+      "n_estimators": {
+        "label": "Número de árboles",
+        "type": "int",
+        "default": 200,
+        "min": 10,
+        "max": 500,
+        "step": 10,
+        "editable": true
+      },
+      "criterion": {
+        "label": "Criterio de división",
+        "type": "choice",
+        "default": "gini",
+        "choices": ["gini", "entropy", "log_loss"],
+        "editable": true
+      },
+      "max_depth": {
+        "label": "Profundidad máxima",
+        "type": "int",
+        "default": null,
+        "nullable": true,
+        "min": 1,
+        "max": 50,
+        "step": 1,
+        "editable": true
+      },
+      "min_samples_split": {
+        "label": "Mínimo de muestras para dividir",
+        "type": "int",
+        "default": 2,
+        "min": 2,
+        "max": 20,
+        "step": 1,
+        "editable": true
+      },
+      "min_samples_leaf": {
+        "label": "Mínimo de muestras por hoja",
+        "type": "int",
+        "default": 1,
+        "min": 1,
+        "max": 20,
+        "step": 1,
+        "editable": true
+      },
+      "max_features": {
+        "label": "Variables por división",
+        "type": "choice",
+        "default": "sqrt",
+        "choices": ["sqrt", "log2", null],
+        "nullable": true,
+        "editable": true
+      },
+      "bootstrap": {
+        "label": "Bootstrap",
+        "type": "bool",
+        "default": true,
+        "editable": true
+      },
+      "class_weight": {
+        "type": "fixed",
+        "default": null,
+        "editable": false
+      },
+      "random_state": {
+        "type": "fixed",
+        "default": 2026,
+        "editable": false
+      }
+    },
+    "NeuralNetwork": {
+      "hidden_layer_sizes": {
+        "label": "Neuronas por capa oculta",
+        "type": "int_list",
+        "default": [32, 16],
+        "min_len": 1,
+        "max_len": 4,
+        "min": 1,
+        "max": 256,
+        "editable": true
+      },
+      "activation": {
+        "label": "Función de activación",
+        "type": "choice",
+        "default": "relu",
+        "choices": ["relu", "tanh", "sigmoid", "elu"],
+        "editable": true
+      },
+      "solver": {
+        "label": "Optimizador",
+        "type": "choice",
+        "default": "adam",
+        "choices": ["adam", "sgd", "rmsprop"],
+        "editable": true
+      },
+      "alpha": {
+        "type": "fixed",
+        "default": 0.0001,
+        "editable": false
+      },
+      "batch_size": {
+        "type": "fixed",
+        "default": "auto",
+        "editable": false
+      },
+      "learning_rate_init": {
+        "type": "fixed",
+        "default": 0.001,
+        "editable": false
+      },
+      "max_iter": {
+        "label": "Épocas",
+        "type": "int",
+        "default": 1000,
+        "ui_default": 100,
+        "min": 10,
+        "max": 2000,
+        "step": 10,
+        "editable": true
+      },
+      "early_stopping": {
+        "type": "fixed",
+        "default": false,
+        "editable": false
+      },
+      "random_state": {
+        "type": "fixed",
+        "default": 2026,
+        "editable": false
+      }
+    }
+  },
+  "regression": {
+    "LinearReg": {
+      "fit_intercept": {
+        "type": "fixed",
+        "default": true,
+        "editable": false
+      },
+      "positive": {
+        "type": "fixed",
+        "default": false,
+        "editable": false
+      }
+    },
+    "SVR": {
+      "kernel": {
+        "label": "Kernel",
+        "type": "choice",
+        "default": "rbf",
+        "choices": ["rbf", "linear", "poly", "sigmoid"],
+        "editable": true
+      },
+      "C": {
+        "label": "C (penalización)",
+        "type": "float",
+        "default": 100.0,
+        "min": 0.01,
+        "max": 1000.0,
+        "editable": true
+      },
+      "epsilon": {
+        "label": "Epsilon",
+        "type": "float",
+        "default": 1.0,
+        "min": 0.0,
+        "max": 10.0,
+        "editable": true
+      },
+      "gamma": {
+        "label": "Gamma",
+        "type": "choice",
+        "default": "scale",
+        "choices": ["scale", "auto", 0.001, 0.01, 0.1, 1.0],
+        "editable": true
+      },
+      "degree": {
+        "type": "fixed",
+        "default": 3,
+        "editable": false
+      },
+      "coef0": {
+        "type": "fixed",
+        "default": 0.0,
+        "editable": false
+      }
+    },
+    "NeuralNetwork": {
+      "hidden_layer_sizes": {
+        "label": "Neuronas por capa oculta",
+        "type": "int_list",
+        "default": [64, 32],
+        "min_len": 1,
+        "max_len": 4,
+        "min": 1,
+        "max": 256,
+        "editable": true
+      },
+      "activation": {
+        "label": "Función de activación",
+        "type": "choice",
+        "default": "relu",
+        "choices": ["relu", "tanh", "sigmoid", "elu"],
+        "editable": true
+      },
+      "solver": {
+        "type": "fixed",
+        "default": "adam",
+        "editable": false
+      },
+      "alpha": {
+        "type": "fixed",
+        "default": 0.0001,
+        "editable": false
+      },
+      "batch_size": {
+        "type": "fixed",
+        "default": "auto",
+        "editable": false
+      },
+      "learning_rate_init": {
+        "type": "fixed",
+        "default": 0.001,
+        "editable": false
+      },
+      "max_iter": {
+        "label": "Épocas",
+        "type": "int",
+        "default": 2000,
+        "ui_default": 100,
+        "min": 10,
+        "max": 3000,
+        "step": 10,
+        "editable": true
+      },
+      "early_stopping": {
+        "type": "fixed",
+        "default": false,
+        "editable": false
+      },
+      "random_state": {
+        "type": "fixed",
+        "default": 2026,
+        "editable": false
+      }
+    }
+  }
+}
