@@ -116,5 +116,6 @@ class TrainingData():
         pass
 
 def load_params():
-    with open("model_cfg.json", "r", encoding="utf-8") as file:
+    ruta = Path(__file__).resolve().parent / "model_cfg.json"
+    with open(ruta, "r", encoding="utf-8") as file:
         return json.load(file)

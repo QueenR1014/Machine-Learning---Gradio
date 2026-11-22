@@ -2,7 +2,7 @@ import pandas as pd
 
 import numpy as np
 
-from dataManagement import TrainingData, load_params
+from models.dataManagement import TrainingData, load_params
 
 from sklearn.model_selection import  GridSearchCV
 from sklearn.preprocessing import StandardScaler
