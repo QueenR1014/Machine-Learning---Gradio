@@ -32,9 +32,6 @@ NOMBRES = {
     "NeuralNetwork": "Red neuronal",
 }
 
-
-
-
 def classification_metrics(y_true, y_pred) -> dict:
     tn, fp, fn, tp = confusion_matrix(y_true, y_pred, labels=[0, 1]).ravel()
     return {
@@ -182,7 +179,31 @@ def NNC(Data_Structure: TrainingData, optimize:bool = True):
         model.add(Input(shape=n_columnas,))
 
         # Solo usaremos 3 capas ocultas
+        model.add(Dense(16,activation="relu"))
+        model.add(Dense(8,activation="relu"))
+        model.add(Dense(8,activation="relu"))
 
+        # Capa de salida
+        model.add(Dense(1, activation="sigmoid"))
+
+        # compilador / optimizador
+        optimizador = "binary_crossentropy" if ds.y.shape[1] == 1 else "categorical_crossentropy" 
+        model.compile(loss=optimizador,
+                        optimizer="adam",
+                        metrics = ["acuracy"])
+        
+        history = model.fit(
+                    X_train,
+                    ds.y_train,
+                    epochs= 100,
+                    validation_data=(X_val_s, ds.y_val),
+                    verbose=0,
+                    callbacks=[TqdmCallback()]
+        )
+
+        return model, history
+
+    
 def build_models(params: dict) -> dict:
     nn = dict(params["NeuralNetwork"])
     nn["hidden_layer_sizes"] = tuple(nn["hidden_layer_sizes"])
@@ -196,6 +217,8 @@ def run_classifications(Data_Structure:TrainingData):
     # función que entrena y predice con cada uno de los modelos de clasificación
     # retorna los modelos entrenados, las predicciones del data split, y las métricas (accuracy, recall, specificity, precision, f1-score)
     
-    # escalado de variables
+    modelos = {
+        ""
+    }
 
     pass
