@@ -59,3 +59,11 @@ class TrainingData():
 
     def transform_new(self, X_new: pd.DataFrame) -> pd.DataFrame:
         return pd.DataFrame(self.scaler.transform(X_new), columns=X_new.columns)
+
+
+def load_params(path=None) -> dict:
+    import json
+    from pathlib import Path
+    path = path or Path(__file__).parent / "models" / "model_cfg.json"
+    with open(path, encoding="utf-8") as f:
+        return json.load(f)
