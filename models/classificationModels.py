@@ -5,7 +5,7 @@ import numpy as np
 from dataManagement import TrainingData, load_params
 
 from sklearn.base import clone
-from sklearn.model_selection import StratifiedKFold, cross_val_score
+from sklearn.model_selection import StratifiedKFold, cross_val_score, GridSearchCV
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 
@@ -45,8 +45,6 @@ def threshold_table(model, X_test, y_test, umbrales=(0.5, 0.4, 0.35, 0.3, 0.25))
     prob = model.predict_proba(X_test)[:, 1]
     filas = [{"Umbral": u, **classification_metrics(y_test, (prob >= u).astype(int))} for u in umbrales]
     return pd.DataFrame(filas).round(3)
-
-from sklearn.model_selection import GridSearchCV
 
 # Parámetros válidos para los modelos
 VALID_LOGREG_PARAMS = ["C", "solver", "max_iter", "penalty"]

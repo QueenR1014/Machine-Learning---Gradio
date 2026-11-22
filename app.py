@@ -12,8 +12,8 @@ from models.classificationModels import NOMBRES as NOMBRES_CLF, classification_m
 from models.regressionModels import NOMBRES as NOMBRES_REG
 
 print("Entrenando modelos...")
-CFG, DS_CLF, DS_REG, RES_CLF, RES_REG = train_all()
-DATA = DS_CLF.data
+#CFG, DS_CLF, DS_REG, RES_CLF, RES_REG = train_all()
+#DATA = DS_CLF.data
 print("Modelos listos.")
 
 RANGOS = DATA[DESCRIPTIVE].agg(["min", "max"])
