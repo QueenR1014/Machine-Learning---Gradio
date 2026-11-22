@@ -144,9 +144,9 @@ def construir_tab(R: Recursos):
 
     sp_test = test_size_spec()
     pct_defecto = round((1 - sp_test["default"]) * 100)
-    opciones_modelo = [(f"{TAREA_ES[t]} · {nombres[k]}", k) for k, (t, _, _) in MODELOS.items()]
+    opciones_modelo = [(f"{TAREA_ES[t]} – {nombres[k]}", k) for k, (t, _, _) in MODELOS.items()]
 
-    with gr.Tab("4 · Interactivo", elem_classes=["modulo", "mod4"]):
+    with gr.Tab("4 – Interactivo", elem_classes=["modulo", "mod4"]):
         gr.HTML(banner(4, "Entrena tu propio modelo",
                        "Elige cualquiera de los seis modelos, ajusta el porcentaje de entrenamiento y sus "
                        "hiperparámetros, entrena y compara contra la versión pre-entrenada de los módulos 2 y 3."))
@@ -276,7 +276,7 @@ def construir_tab(R: Recursos):
                 (f"{segundos:.1f} s", "Tiempo de entrenamiento"),
             ])
             hist = hist + [{
-                "#": len(hist) + 1, "Modelo": f"{TAREA_ES[tarea]} · {nombres[key]}", "% entrenamiento": int(pct),
+                "#": len(hist) + 1, "Modelo": f"{TAREA_ES[tarea]} – {nombres[key]}", "% entrenamiento": int(pct),
                 "Hiperparámetros": _texto_params(aplicados), "Resultado": resultado,
                 "Tiempo (s)": round(segundos, 1),
             }]

@@ -31,7 +31,7 @@ def construir_tab(R: Recursos):
     n_crudos, n_limpios = len(R.crudos), len(R.datos)
     tasa_falla = R.datos[OBJ_CLF].mean()
 
-    with gr.Tab("1 · Exploración", elem_classes=["modulo", "mod1"]):
+    with gr.Tab("1 – Exploración", elem_classes=["modulo", "mod1"]):
         gr.HTML(banner(1, "Exploración de los datos",
                        "Vista general del conjunto de datos de los equipos: primeras filas, estadísticas "
                        "descriptivas y distribución de cada variable."))

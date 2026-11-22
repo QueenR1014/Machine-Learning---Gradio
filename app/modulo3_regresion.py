@@ -2,7 +2,7 @@
 import gradio as gr
 import pandas as pd
 
-from app import graficos
+from app import graficos, hiperparametros
 from app.componentes import campos_registro, tabla_metricas
 from app.estilos import aviso, banner, seccion
 from app.recursos import (DESCRIPTIVE_COLS, OBJ_REG, Recursos, etiqueta, fila_aleatoria_prueba,
@@ -17,7 +17,7 @@ def construir_tab(R: Recursos):
     fila_mejor = metricas.loc[mejor]
     r2_por_modelo = dict(zip(metricas["Modelo"], metricas["R2"]))
 
-    with gr.Tab("3 · Regresión", elem_classes=["modulo", "mod3"]):
+    with gr.Tab("3 – Regresión", elem_classes=["modulo", "mod3"]):
         gr.HTML(banner(3, "Modelo de regresión: consumo energético",
                        "Regresión lineal, SVR y red neuronal, entrenados previamente y evaluados sobre el "
                        "mismo conjunto de prueba (20 %). El consumo se predice en kWh."))
@@ -29,6 +29,10 @@ def construir_tab(R: Recursos):
         gr.Dataframe(estilo, interactive=False)
         gr.HTML(aviso(f"Mejor modelo: <b>{fila_mejor['Modelo']}</b>, con R² = {fila_mejor['R2']:.4f}, "
                       f"RMSE = {fila_mejor['RMSE']:.3f} kWh y MAE = {fila_mejor['MAE']:.3f} kWh."))
+
+        gr.HTML(seccion("Hiperparámetros de los modelos cargados",
+                        "Configuración con la que se entrenó cada modelo que usa este módulo."))
+        gr.HTML(hiperparametros.tarjetas(R.reg["modelos"], nombres))
 
         gr.HTML(seccion("Consumo real vs predicho", "Cada punto es un equipo del conjunto de prueba; "
                                                     "la línea punteada es la predicción perfecta."))

@@ -43,10 +43,10 @@ Cada vez que arranca, la app reinicia `models/model_cfg.json` con los valores po
 
 | Módulo | Qué hace |
 | --- | --- |
-| 1 · Exploración | Primeras filas, estadísticas descriptivas, histograma/boxplot de una variable, correlaciones y balance de clases. |
-| 2 · Clasificación | Compara las métricas de regresión logística, Random Forest y la red neuronal, con sus matrices de confusión. Predice la falla de un registro nuevo o de un archivo CSV/Excel. |
-| 3 · Regresión | Compara las métricas de regresión lineal, SVR y la red neuronal. Predice el consumo de un registro nuevo o de un archivo. |
-| 4 · Interactivo | Eliges un modelo, el % de entrenamiento y sus hiperparámetros, y lo reentrenas. Las métricas se comparan con las del modelo pre-entrenado. |
+| 1 – Exploración | Primeras filas, estadísticas descriptivas, histograma/boxplot de una variable, correlaciones y balance de clases. |
+| 2 – Clasificación | Compara las métricas de regresión logística, Random Forest y la red neuronal, con sus matrices de confusión. Predice la falla de un registro nuevo o de un archivo CSV/Excel. |
+| 3 – Regresión | Compara las métricas de regresión lineal, SVR y la red neuronal. Predice el consumo de un registro nuevo o de un archivo. |
+| 4 – Interactivo | Eliges un modelo, el % de entrenamiento y sus hiperparámetros, y lo reentrenas. Las métricas se comparan con las del modelo pre-entrenado. |
 
 Los módulos 2 y 3 usan los modelos pre-entrenados. El módulo 4 entrena siempre con `optimize=False` y no sobrescribe los modelos guardados: sus resultados viven solo en la sesión.
 

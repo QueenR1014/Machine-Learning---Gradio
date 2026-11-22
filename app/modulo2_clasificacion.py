@@ -2,7 +2,7 @@
 import gradio as gr
 import pandas as pd
 
-from app import graficos
+from app import graficos, hiperparametros
 from app.componentes import campos_registro, tabla_metricas
 from app.estilos import aviso, banner, seccion
 from app.recursos import (CLASES, DESCRIPTIVE_COLS, OBJ_CLF, UMBRAL, Recursos, etiqueta, fila_aleatoria_prueba,
@@ -16,7 +16,7 @@ def construir_tab(R: Recursos):
     estilo, mejor = tabla_metricas(metricas, "F1", 2)
     fila_mejor = metricas.loc[mejor]
 
-    with gr.Tab("2 · Clasificación", elem_classes=["modulo", "mod2"]):
+    with gr.Tab("2 – Clasificación", elem_classes=["modulo", "mod2"]):
         gr.HTML(banner(2, "Modelo de clasificación: falla del equipo",
                        "Regresión logística, Random Forest y red neuronal, entrenados previamente y evaluados "
                        "sobre el mismo conjunto de prueba (20 %)."))
@@ -28,6 +28,10 @@ def construir_tab(R: Recursos):
         gr.Dataframe(estilo, interactive=False)
         gr.HTML(aviso(f"Mejor modelo: <b>{fila_mejor['Modelo']}</b>, con F1 = {fila_mejor['F1']:.3f}, "
                       f"accuracy = {fila_mejor['Accuracy']:.3f} y recall = {fila_mejor['Recall']:.3f}."))
+
+        gr.HTML(seccion("Hiperparámetros de los modelos cargados",
+                        "Configuración con la que se entrenó cada modelo que usa este módulo."))
+        gr.HTML(hiperparametros.tarjetas(R.clf["modelos"], nombres))
 
         gr.HTML(seccion("Matrices de confusión"))
         gr.Plot(graficos.matrices_confusion(

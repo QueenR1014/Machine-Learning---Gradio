@@ -119,6 +119,29 @@ CSS = "".join(_css_modulo(n) for n in PALETAS) + """
 .veredicto { font-size: 1.05rem; }
 .veredicto b { color: var(--m-medio); }
 
+/* ================= Hiperparámetros de los modelos cargados ================= */
+.hp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.hp-card {
+    border: 1px solid var(--border-color-primary); border-radius: 12px; padding: 14px 16px;
+    background: var(--background-fill-primary);
+    box-shadow: 0 1px 2px rgba(0,0,0,.04);
+}
+.hp-titulo { font-weight: 650; font-size: 1rem; letter-spacing: -.01em; color: var(--m-medio); }
+.hp-sub { font-size: .78rem; line-height: 1.4; color: var(--body-text-color-subdued); margin: 2px 0 10px; }
+.hp-fila {
+    display: flex; justify-content: space-between; gap: 12px; padding: 5px 0;
+    border-top: 1px solid color-mix(in srgb, var(--border-color-primary) 70%, transparent); font-size: .86rem;
+}
+.hp-p { color: var(--body-text-color-subdued); }
+.hp-v { font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
+.hp-fila.ajustado .hp-v { color: var(--m-medio); }
+.hp-fila.ajustado .hp-p::before, .hp-punto {
+    content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--m-medio); margin-right: 7px; vertical-align: middle;
+}
+.dark .hp-titulo, .dark .hp-fila.ajustado .hp-v { color: var(--m-claro); }
+.hp-leyenda { font-size: .78rem; color: var(--body-text-color-subdued); margin-top: 8px; }
+
 /* ================= Encabezado y créditos ================= */
 .header-app { text-align: center; padding: 28px 16px 18px; }
 .header-app .curso {
