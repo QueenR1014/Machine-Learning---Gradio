@@ -1,6 +1,6 @@
 import numpy as np
 
-from dataManagement import TrainingData, load_params
+from models.dataManagement import TrainingData, load_params
 
 from sklearn.linear_model import LinearRegression
 from sklearn.svm import SVR
