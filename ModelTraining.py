@@ -1,46 +1,77 @@
-# Módulo place holder para la verdadera apliación con gradio
+import hashlib
+import json
+from pathlib import Path
 
-# Modelos de clasificación
+import joblib
+import pandas as pd
+
 from models.classificationModels import run_classifications
 from models.regressionModels import run_regression
+from dataManagement import TrainingData, DESCRIPTIVE_COLS as DESCRIPTIVE
 
-# Módulo de estructura de datos
-from models.dataManagement import TrainingData
+DATA_URL = "https://raw.githubusercontent.com/Fabian830348/Bases_Datos/refs/heads/master/Casos_Estudio/Datos/Datos_energia_Caso_Final_ML_2026.csv"
+LOCAL_CSV = Path(__file__).parent / "data" / "Datos_energia_Caso_Final_ML_2026.csv"
+CACHE_PATH = Path(__file__).parent / "models" / "trained_models.joblib"
 
-# Las siguientes variables deberían ser atrapadas por la aplicación cuando el usuario las ingrese
-# 1. La ruta de los datos 
-DATA_ROUTE = "https://raw.githubusercontent.com/Fabian830348/Bases_Datos/refs/heads/master/Casos_Estudio/Datos/Datos_energia_Caso_Final_ML_2026.csv"
-#2. Las variables objetivo
-# debe lograr discernir si el objetivo es de regresión o clasificación
-# Tipo de variable objetivo
-objective_type = "classification"
-# Columna con la variable objetivo
-OBJECTIVE = ["Falla del Equipo"]
-#3. Las variables descriptivas
-DESCRIPTIVE = []
-# 4. El porcentaje de los datos usados para entrenamiento
-TEST_SIZE = 0.2
-# 5. Parámetros de los modelos
-# Estructura JSON con los parámetros de los modelos que escoge el usuario
-model_parameters = None
 
-####### CREACIÓN ESTRUCTURA DE DATOS PARA TODOS LOS MODELOS #####
-DATA_STRUCTURE = TrainingData(DATA_ROUTE=DATA_ROUTE)
-##################### ESCALADO DE VARIABLES #####################
-DATA_STRUCTURE.scale_data(scaler_type="std",exclude_binary=True)
-##################### CATEGORIZACIÓN #####################
-DATA_STRUCTURE.cathegorize_data()
-####################### TRAIN-TEST SPLIT ######################## 
-DATA_STRUCTURE.make_split(
-    DESCRIPTIVE=DESCRIPTIVE, 
-    OBJECTIVE=OBJECTIVE,
-    TEST_SIZE=TEST_SIZE,
-    objective_type=objective_type
-    )
+def resolve_data_route() -> str:
+    if not LOCAL_CSV.is_file():
+        LOCAL_CSV.parent.mkdir(exist_ok=True)
+        pd.read_csv(DATA_URL).to_csv(LOCAL_CSV, index=False)
+    return str(LOCAL_CSV)
 
-if objective_type == "classification":
-    run_classifications()
-elif objective_type == "regression":
-    run_regression()
-else:
-    raise ValueError(f"Non valid objective type: {objective_type}")
+
+DATA_ROUTE = resolve_data_route()
+OBJECTIVES = {"classification": "falla_del_equipo", "regression": "consumo_energetico"}
+CFG_PATH = Path(__file__).parent / "models" / "model_cfg.json"
+
+
+def load_cfg() -> dict:
+    with open(CFG_PATH, encoding="utf-8") as f:
+        return json.load(f)
+
+
+def build_structure(objective_type: str, test_size: float) -> TrainingData:
+    ds = TrainingData(DATA_ROUTE=DATA_ROUTE)
+    ds.make_split(DESCRIPTIVE=DESCRIPTIVE, OBJECTIVE=OBJECTIVES[objective_type],
+                  TEST_SIZE=test_size, objective_type=objective_type)
+    ds.scale_data()
+    return ds
+
+
+def _signature() -> str:
+    h = hashlib.md5()
+    h.update(CFG_PATH.read_bytes())
+    h.update(Path(DATA_ROUTE).read_bytes())
+    return h.hexdigest()
+
+
+def train_all(use_cache: bool = True):
+    sig = _signature()
+    if use_cache and CACHE_PATH.is_file():
+        saved = joblib.load(CACHE_PATH)
+        if saved["sig"] == sig:
+            return saved["result"]
+
+    result = _train_all()
+    joblib.dump({"sig": sig, "result": result}, CACHE_PATH)
+    return result
+
+
+def _train_all():
+    cfg = load_cfg()
+    test_size = cfg["test_size"]
+
+    ds_clf = build_structure("classification", test_size)
+    ds_reg = build_structure("regression", test_size)
+
+    res_clf = run_classifications(ds_clf, cfg["classification"])
+    res_reg = run_regression(ds_reg, cfg["regression"])
+    return cfg, ds_clf, ds_reg, res_clf, res_reg
+
+
+if __name__ == "__main__":
+    cfg, ds_clf, ds_reg, res_clf, res_reg = train_all()
+    print(f"Filas usadas: {len(ds_clf.data)} de {len(ds_clf.raw_data)}\n")
+    print("Clasificación\n", res_clf["metrics"], "\nMejor:", res_clf["best"], "\n")
+    print("Regresión\n", res_reg["metrics"], "\nMejor:", res_reg["best"])
