@@ -1,3 +1,5 @@
+import numpy as np
+
 from dataManagement import TrainingData, load_params
 
 from sklearn.linear_model import LogisticRegression
@@ -82,7 +84,11 @@ def RandForest(Data_Structure: TrainingData, optimize:bool = True):
             verbose=1,
             n_jobs=-1  # Muy recomendado en Random Forest para entrenar árboles en paralelo
         )
-                
+        return Grid.best_estimator_
+
+def NNC(Data_Structure: TrainingData):
+    pass
+
 def run_classifications(Data_Structure:TrainingData):
     # función que entrena y predice con cada uno de los modelos de clasificación
     # retorna los modelos entrenados, las predicciones del data split, y las métricas (accuracy, recall, specificity, precision, f1-score)
