@@ -16,16 +16,19 @@ from keras.models    import Sequential
 from keras.layers    import Dense, Input
 from tqdm.keras                 import TqdmCallback
 
+SEED = 2026
+
 
 # Parámetros válidos para los modelos
 VALID_LOGREG_PARAMS = ["C", "solver", "max_iter", "penalty"]
 VALID_RANDFOREST_PARAMS = ["n_estimators", "criterion", "max_depth", "min_samples_split","min_samples_leaf","max_features","bootstrap","random_state"]
 VALID_NNC_PARAMS = ["hidden_layer_sizes", "activation", "solver", "alpha", "max_iter"]
 
+# Mismas llaves que el diccionario de modelos de run_classifications
 NOMBRES = {
     "LogReg": "Regresión logística",
-    "RandomForest": "Random Forest",
-    "NeuralNetwork": "Red neuronal",
+    "RandForest": "Random Forest",
+    "NNC": "Red neuronal",
 }
 
 def classification_metrics(y_true, y_pred) -> dict:
@@ -38,8 +41,17 @@ def classification_metrics(y_true, y_pred) -> dict:
         "F1": f1_score(y_true, y_pred, zero_division=0),
     }
 
+def probabilidad_falla(modelo, X) -> np.ndarray:
+    """Probabilidad de falla (clase 1) para cualquiera de los 3 modelos.
+    Acepta el modelo de sklearn, el modelo de Keras o la tupla (model, history) de NNC."""
+    if isinstance(modelo, tuple):
+        modelo = modelo[0]
+    if hasattr(modelo, "predict_proba"):
+        return modelo.predict_proba(X)[:, 1]
+    return np.asarray(modelo.predict(np.asarray(X, dtype="float32"), verbose=0)).ravel()
+
 def threshold_table(model, X_test, y_test, umbrales=(0.5, 0.4, 0.35, 0.3, 0.25)) -> pd.DataFrame:
-    prob = model.predict_proba(X_test)[:, 1]
+    prob = probabilidad_falla(model, X_test)
     filas = [{"Umbral": u, **classification_metrics(y_test, (prob >= u).astype(int))} for u in umbrales]
     return pd.DataFrame(filas).round(3)
 
@@ -61,7 +73,7 @@ def LogClassification(Data_Structure: TrainingData, optimize:bool=True):
 
     elif optimize:
 
-        model = LogisticRegression()
+        model = LogisticRegression(random_state=SEED)
         # Lista de diccionarios para evitar combinaciones incompatibles (ej. lbfgs con l1)
         grid_params = [
             {
@@ -84,7 +96,9 @@ def LogClassification(Data_Structure: TrainingData, optimize:bool=True):
             model, 
             grid_params,
             cv= 10,
-            verbose= 1
+            scoring="f1",   # clases desbalanceadas (75/25): mismo criterio con el que se elige el mejor modelo
+            verbose= 1,
+            n_jobs=-1
         )
 
         Grid.fit(Data_Structure.X_train_scaled, Data_Structure.y_train)
@@ -102,9 +116,10 @@ def RandForest(Data_Structure: TrainingData, optimize:bool = True):
         # MODELO
         model = RandomForestClassifier(**forest_params)
         model.fit(Data_Structure.X_train_scaled, Data_Structure.y_train)
+        return model
     elif optimize:
 
-        model = RandomForestClassifier()
+        model = RandomForestClassifier(random_state=SEED)
         grid_params = {
             "n_estimators": [100, 200, 300],        # Número de árboles en el bosque
             "max_depth": [None, 10, 20, 30],        # Profundidad máxima de cada árbol (None = sin límite)
@@ -118,9 +133,11 @@ def RandForest(Data_Structure: TrainingData, optimize:bool = True):
             estimator=model,
             param_grid=grid_params,
             cv=10,
+            scoring="f1",
             verbose=1,
             n_jobs=-1  # Muy recomendado en Random Forest para entrenar árboles en paralelo
         )
+        Grid.fit(Data_Structure.X_train_scaled, Data_Structure.y_train)
         return Grid.best_estimator_
 
 def NNC(Data_Structure: TrainingData, optimize:bool = True):
@@ -201,14 +218,25 @@ def NNC(Data_Structure: TrainingData, optimize:bool = True):
         return model, history
     
     
-def run_classifications(Data_Structure:TrainingData):
-    # TO DO:
-    # función que entrena y predice con cada uno de los modelos de clasificación
-    # retorna los modelos entrenados, las predicciones del data split, y las métricas (accuracy, recall, specificity, precision, f1-score)
-    
+def run_classifications(Data_Structure:TrainingData, optimize:bool = True):
+    # Entrena y predice con cada uno de los modelos de clasificación sobre el mismo split.
+    # Retorna:
+    #   modelos:      {"LogReg": modelo, "RandForest": modelo, "NNC": (model, history)}
+    #   predicciones: {"LogReg": array 0/1, "RandForest": array 0/1, "NNC": array 0/1} sobre ds.X_test_scaled
+    ds = Data_Structure
+
     modelos = {
-        "LogReg": LogClassification(Data_Structure=Data_Structure),
-        "RandForest": RandForest(Data_Structure=Data_Structure),
-        "NNC": NNC(Data_Structure=Data_Structure) # recordar que son una tupla (model, history)
+        "LogReg": LogClassification(Data_Structure=ds, optimize=optimize),
+        "RandForest": RandForest(Data_Structure=ds, optimize=optimize),
+        "NNC": NNC(Data_Structure=ds, optimize=optimize) # recordar que son una tupla (model, history)
     }
 
+    predicciones = {}
+    for key, modelo in modelos.items():
+        if key == "NNC":
+            # Keras da probabilidades: umbral 0.5 para pasar a 0/1
+            predicciones[key] = (probabilidad_falla(modelo, ds.X_test_scaled) >= 0.5).astype(int)
+        else:
+            predicciones[key] = np.asarray(modelo.predict(ds.X_test_scaled)).astype(int)
+
+    return modelos, predicciones

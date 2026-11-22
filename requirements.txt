@@ -6,3 +6,5 @@ seaborn
 joblib
 gradio
 tensorflow
+openpyxl
+tqdm
