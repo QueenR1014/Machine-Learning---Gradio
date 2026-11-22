@@ -204,21 +204,14 @@ def NNC(Data_Structure: TrainingData, optimize:bool = True):
         return model, history
 
     
-def build_models(params: dict) -> dict:
-    nn = dict(params["NeuralNetwork"])
-    nn["hidden_layer_sizes"] = tuple(nn["hidden_layer_sizes"])
-    return {
-        "LogReg": LogisticRegression(**params["LogReg"]),
-        "RandomForest": RandomForestClassifier(**params["RandomForest"]),
-        "NeuralNetwork": MLPClassifier(**nn),
-    }
-
 def run_classifications(Data_Structure:TrainingData):
     # función que entrena y predice con cada uno de los modelos de clasificación
     # retorna los modelos entrenados, las predicciones del data split, y las métricas (accuracy, recall, specificity, precision, f1-score)
     
     modelos = {
-        ""
+        "LogReg": LogClassification(Data_Structure=Data_Structure),
+        "RandForest": RandForest(Data_Structure=Data_Structure),
+        "NNC": NNC(Data_Structure=Data_Structure) # recordar que son una tubla (model, history)
     }
-
+    
     pass
