@@ -1,65 +1,66 @@
-from dataManagement import TrainingData, load_params
+import pandas as pd
+
+from dataManagement import TrainingData
+
+from sklearn.base import clone
+from sklearn.model_selection import StratifiedKFold, cross_val_score
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
 
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.neural_network import MLPClassifier
+from sklearn.metrics import confusion_matrix, accuracy_score, recall_score, precision_score, f1_score
 
-from sklearn.model_selection import GridSearchCV
+NOMBRES = {
+    "LogReg": "Regresión logística",
+    "RandomForest": "Random Forest",
+    "NeuralNetwork": "Red neuronal",
+}
 
-# Parámetros válidos para los modelos
-VALID_LOGREG_PARAMS = ["C", "solver", "max_iter", "penalty"]
-VALID_RANDFOREST_PARAMS = []
-VALID_NNC_PARAMS = []
 
-# Devuelve un modelo LogisticRegression entrenado con el training_data.X_train y training_data.y_train
-def LogClassification(Data_Structure: TrainingData, optimize:bool=True):
-    
-    if Data_Structure.scaler is None:
-        raise RuntimeError(f"Primero debes llamar a TrainingData.scale()")
+def build_models(params: dict) -> dict:
+    nn = dict(params["NeuralNetwork"])
+    nn["hidden_layer_sizes"] = tuple(nn["hidden_layer_sizes"])
+    return {
+        "LogReg": LogisticRegression(**params["LogReg"]),
+        "RandomForest": RandomForestClassifier(**params["RandomForest"]),
+        "NeuralNetwork": MLPClassifier(**nn),
+    }
 
-    if not optimize:
-        # parámetros seleccionados para la regresión logística
-        raw_params = load_params['classification']['LogReg']
-        log_params = {k: v for k, v in raw_params.items() if k in VALID_LOGREG_PARAMS}
-        # modelo
-        model = LogisticRegression(**log_params)
-        model.fit(Data_Structure.X_train, Data_Structure.y_train)
-        return model
 
-    elif optimize:
+def classification_metrics(y_true, y_pred) -> dict:
+    tn, fp, fn, tp = confusion_matrix(y_true, y_pred, labels=[0, 1]).ravel()
+    return {
+        "Accuracy": accuracy_score(y_true, y_pred),
+        "Recall": recall_score(y_true, y_pred, zero_division=0),
+        "Specificity": tn / (tn + fp),
+        "Precision": precision_score(y_true, y_pred, zero_division=0),
+        "F1": f1_score(y_true, y_pred, zero_division=0),
+    }
 
-        model = LogisticRegression()
-        # Lista de diccionarios para evitar combinaciones incompatibles (ej. lbfgs con l1)
-        grid_params = [
-            {
-                "solver": ["lbfgs"],
-                "penalty": ["l2"],
-                "C": [0.001, 0.01, 0.1, 1, 10, 100],
-                "max_iter": [100, 500, 1000]
-            },
-            {
-                "solver": ["liblinear", "saga"],
-                "penalty": ["l1", "l2"],
-                "C": [0.001, 0.01, 0.1, 1, 10, 100],
-                "max_iter": [100, 500, 1000]
-            }
-        ]
 
-        # print(10*"#" + " ENTRENANDO LOGREG CON GRID SEARCH" + 10*"#")
-        # print(grid_params)
-        Grid = GridSearchCV(
-            model, 
-            grid_params,
-            cv= 10,
-            verbose= 1
-        )
+def run_classifications(Data_Structure: TrainingData, model_parameters: dict):
+    ds = Data_Structure
+    models = build_models(model_parameters)
 
-        Grid.fit(Data_Structure.X_train, Data_Structure.y_train)
-        return Grid.best_estimator_
+    skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=2026)
+    matrices, filas = {}, []
+    for key, model in models.items():
+        cv = cross_val_score(make_pipeline(StandardScaler(), clone(model)),
+                             ds.X_train, ds.y_train, cv=skf, scoring="f1")
+        model.fit(ds.X_train_scaled, ds.y_train)
+        pred = model.predict(ds.X_test_scaled)
+        matrices[key] = confusion_matrix(ds.y_test, pred, labels=[0, 1])
+        filas.append({"Modelo": NOMBRES[key], **classification_metrics(ds.y_test, pred),
+                      "F1 (CV media)": cv.mean(), "F1 (CV desv.)": cv.std()})
 
-def run_classifications(Data_Structure:TrainingData):
-    # función que entrena y predice con cada uno de los modelos de clasificación
-    # retorna los modelos entrenados, las predicciones del data split, y las métricas (accuracy, recall, specificity, precision, f1-score)
-    
-    # escalado de variables
+    metrics = pd.DataFrame(filas).round(3)
+    best = metrics.sort_values("F1 (CV media)", ascending=False).iloc[0]["Modelo"]
+    return {"models": models, "matrices": matrices, "metrics": metrics, "best": best}
 
-    pass
+
+def threshold_table(model, X_test, y_test, umbrales=(0.5, 0.4, 0.35, 0.3, 0.25)) -> pd.DataFrame:
+    prob = model.predict_proba(X_test)[:, 1]
+    filas = [{"Umbral": u, **classification_metrics(y_test, (prob >= u).astype(int))} for u in umbrales]
+    return pd.DataFrame(filas).round(3)
