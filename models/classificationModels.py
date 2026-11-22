@@ -33,14 +33,6 @@ NOMBRES = {
 }
 
 
-def build_models(params: dict) -> dict:
-    nn = dict(params["NeuralNetwork"])
-    nn["hidden_layer_sizes"] = tuple(nn["hidden_layer_sizes"])
-    return {
-        "LogReg": LogisticRegression(**params["LogReg"]),
-        "RandomForest": RandomForestClassifier(**params["RandomForest"]),
-        "NeuralNetwork": MLPClassifier(**nn),
-    }
 
 
 def classification_metrics(y_true, y_pred) -> dict:
@@ -61,7 +53,7 @@ def threshold_table(model, X_test, y_test, umbrales=(0.5, 0.4, 0.35, 0.3, 0.25))
 
 # Devuelve un modelo LogisticRegression entrenado con el training_data.X_train y training_data.y_train
 def LogClassification(Data_Structure: TrainingData, optimize:bool=True):
-    
+    # print(10*"#" + " ENTRENANDO LOGREG CON GRID SEARCH" + 10*"#")
     if Data_Structure.scaler is None:
         raise RuntimeError(f"Primero debes llamar a TrainingData.scale()")
 
@@ -93,7 +85,7 @@ def LogClassification(Data_Structure: TrainingData, optimize:bool=True):
             }
         ]
 
-        # print(10*"#" + " ENTRENANDO LOGREG CON GRID SEARCH" + 10*"#")
+        
         # print(grid_params)
         Grid = GridSearchCV(
             model, 
@@ -106,7 +98,8 @@ def LogClassification(Data_Structure: TrainingData, optimize:bool=True):
         return Grid.best_estimator_
 
 def RandForest(Data_Structure: TrainingData, optimize:bool = True):
-
+    # print(10*"#" + " ENTRENANDO RANDOM FOREST " + 10*"#")
+   
     if not optimize:
         raw_params = load_params()['classification']['RandomForest']
         forest_params = {k: v for k, v in raw_params.items() if k in VALID_RANDFOREST_PARAMS}
@@ -124,6 +117,7 @@ def RandForest(Data_Structure: TrainingData, optimize:bool = True):
             "max_features": ["sqrt", "log2"],       # Número de variables a considerar en cada división
             "criterion": ["gini", "entropy"]        # Función para medir la calidad de la división
         }
+        # print(grid_params)
         Grid = GridSearchCV(
             estimator=model,
             param_grid=grid_params,
@@ -134,6 +128,7 @@ def RandForest(Data_Structure: TrainingData, optimize:bool = True):
         return Grid.best_estimator_
 
 def NNC(Data_Structure: TrainingData, optimize:bool = True):
+    print("En")
     # Fijamos semilla para reproductibilidad
     np.random.seed(2)
 
@@ -182,6 +177,21 @@ def NNC(Data_Structure: TrainingData, optimize:bool = True):
         )
 
         return model, history
+    if optimize:
+        model = Sequential()
+        model.add(Input(shape=n_columnas,))
+
+        # Solo usaremos 3 capas ocultas
+
+def build_models(params: dict) -> dict:
+    nn = dict(params["NeuralNetwork"])
+    nn["hidden_layer_sizes"] = tuple(nn["hidden_layer_sizes"])
+    return {
+        "LogReg": LogisticRegression(**params["LogReg"]),
+        "RandomForest": RandomForestClassifier(**params["RandomForest"]),
+        "NeuralNetwork": MLPClassifier(**nn),
+    }
+
 def run_classifications(Data_Structure:TrainingData):
     # función que entrena y predice con cada uno de los modelos de clasificación
     # retorna los modelos entrenados, las predicciones del data split, y las métricas (accuracy, recall, specificity, precision, f1-score)
