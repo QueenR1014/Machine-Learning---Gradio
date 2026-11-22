@@ -63,7 +63,7 @@ def LogClassification(Data_Structure: TrainingData, optimize:bool=True):
         log_params = {k: v for k, v in raw_params.items() if k in VALID_LOGREG_PARAMS}
         # modelo
         model = LogisticRegression(**log_params)
-        model.fit(Data_Structure.X_train, Data_Structure.y_train)
+        model.fit(Data_Structure.X_train_scaled, Data_Structure.y_train)
         return model
 
     elif optimize:
@@ -94,7 +94,7 @@ def LogClassification(Data_Structure: TrainingData, optimize:bool=True):
             verbose= 1
         )
 
-        Grid.fit(Data_Structure.X_train, Data_Structure.y_train)
+        Grid.fit(Data_Structure.X_train_scaled, Data_Structure.y_train)
         return Grid.best_estimator_
 
 def RandForest(Data_Structure: TrainingData, optimize:bool = True):
@@ -105,7 +105,7 @@ def RandForest(Data_Structure: TrainingData, optimize:bool = True):
         forest_params = {k: v for k, v in raw_params.items() if k in VALID_RANDFOREST_PARAMS}
         # MODELO
         model = RandomForestClassifier(**forest_params)
-        model.fit(Data_Structure.X_train, Data_Structure.y_train)
+        model.fit(Data_Structure.X_train_scaled, Data_Structure.y_train)
     elif optimize:
 
         model = RandomForestClassifier()
