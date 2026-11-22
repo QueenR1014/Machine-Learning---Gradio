@@ -12,12 +12,8 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import confusion_matrix, accuracy_score, recall_score, precision_score, f1_score
 
-
-import tensorflow as tf
 from keras.models    import Sequential
 from keras.layers    import Dense, Input
-from keras.layers    import Dropout
-from keras.callbacks            import EarlyStopping, LearningRateScheduler
 from tqdm.keras                 import TqdmCallback
 
 
@@ -82,7 +78,7 @@ def LogClassification(Data_Structure: TrainingData, optimize:bool=True):
             }
         ]
 
-        
+    
         # print(grid_params)
         Grid = GridSearchCV(
             model, 
@@ -96,7 +92,10 @@ def LogClassification(Data_Structure: TrainingData, optimize:bool=True):
 
 def RandForest(Data_Structure: TrainingData, optimize:bool = True):
     # print(10*"#" + " ENTRENANDO RANDOM FOREST " + 10*"#")
-   
+
+    if Data_Structure.scaler is None:
+        raise RuntimeError(f"Primero debes llamar a TrainingData.scale()")
+    
     if not optimize:
         raw_params = load_params()['classification']['RandomForest']
         forest_params = {k: v for k, v in raw_params.items() if k in VALID_RANDFOREST_PARAMS}
@@ -125,7 +124,9 @@ def RandForest(Data_Structure: TrainingData, optimize:bool = True):
         return Grid.best_estimator_
 
 def NNC(Data_Structure: TrainingData, optimize:bool = True):
-    print("En")
+    # print(10*"#" + " ENTRENANDO NEURAL NETWORK CLASSIFICATION " + 10*"#")
+    if Data_Structure.scaler is None:
+            raise RuntimeError(f"Primero debes llamar a TrainingData.scale()")
     # Fijamos semilla para reproductibilidad
     np.random.seed(2)
 
@@ -205,13 +206,13 @@ def NNC(Data_Structure: TrainingData, optimize:bool = True):
 
     
 def run_classifications(Data_Structure:TrainingData):
+    # TO DO:
     # función que entrena y predice con cada uno de los modelos de clasificación
     # retorna los modelos entrenados, las predicciones del data split, y las métricas (accuracy, recall, specificity, precision, f1-score)
     
     modelos = {
         "LogReg": LogClassification(Data_Structure=Data_Structure),
         "RandForest": RandForest(Data_Structure=Data_Structure),
-        "NNC": NNC(Data_Structure=Data_Structure) # recordar que son una tubla (model, history)
+        "NNC": NNC(Data_Structure=Data_Structure) # recordar que son una tupla (model, history)
     }
-    
-    pass
+

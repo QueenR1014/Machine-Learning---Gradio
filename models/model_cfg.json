@@ -32,7 +32,7 @@
     }
   },
   "regression": {
-    "LinearRegression": {
+    "LinearReg": {
       "fit_intercept": true,
       "positive": false
     },
