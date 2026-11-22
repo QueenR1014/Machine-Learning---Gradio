@@ -14,6 +14,11 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import confusion_matrix, accuracy_score, recall_score, precision_score, f1_score
 
+# Parámetros válidos para los modelos
+VALID_LOGREG_PARAMS = ["C", "solver", "max_iter", "penalty"]
+VALID_RANDFOREST_PARAMS = ["n_estimators", "criterion", "max_depth", "min_samples_split","min_samples_leaf","max_features","bootstrap","random_state"]
+VALID_NNC_PARAMS = []
+
 NOMBRES = {
     "LogReg": "Regresión logística",
     "RandomForest": "Random Forest",
@@ -46,10 +51,6 @@ def threshold_table(model, X_test, y_test, umbrales=(0.5, 0.4, 0.35, 0.3, 0.25))
     filas = [{"Umbral": u, **classification_metrics(y_test, (prob >= u).astype(int))} for u in umbrales]
     return pd.DataFrame(filas).round(3)
 
-# Parámetros válidos para los modelos
-VALID_LOGREG_PARAMS = ["C", "solver", "max_iter", "penalty"]
-VALID_RANDFOREST_PARAMS = ["n_estimators", "criterion", "max_depth", "min_samples_split","min_samples_leaf","max_features","bootstrap","random_state"]
-VALID_NNC_PARAMS = []
 
 # Devuelve un modelo LogisticRegression entrenado con el training_data.X_train y training_data.y_train
 def LogClassification(Data_Structure: TrainingData, optimize:bool=True):
