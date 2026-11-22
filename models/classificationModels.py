@@ -4,15 +4,21 @@ import numpy as np
 
 from dataManagement import TrainingData, load_params
 
-from sklearn.base import clone
-from sklearn.model_selection import StratifiedKFold, cross_val_score, GridSearchCV
-from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import  GridSearchCV
+
 
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import confusion_matrix, accuracy_score, recall_score, precision_score, f1_score
+
+import tensorflow as tf
+from keras.models    import Sequential
+from keras.layers    import Dense, Input
+from keras.layers    import Dropout
+from keras.callbacks            import EarlyStopping, LearningRateScheduler
+from tqdm.keras                 import TqdmCallback
+
 
 # Parámetros válidos para los modelos
 VALID_LOGREG_PARAMS = ["C", "solver", "max_iter", "penalty"]
@@ -126,8 +132,14 @@ def RandForest(Data_Structure: TrainingData, optimize:bool = True):
         )
         return Grid.best_estimator_
 
-def NNC(Data_Structure: TrainingData):
-    pass
+def NNC(Data_Structure: TrainingData, optimize:bool = True):
+    # Fijamos semilla para reproductibilidad
+    np.random.seed(2)
+
+    ds = Data_Structure
+    n_columnas = ds.X_train.shape[1]
+
+    # Crear separación de validación
 
 def run_classifications(Data_Structure:TrainingData):
     # función que entrena y predice con cada uno de los modelos de clasificación

@@ -46,7 +46,12 @@ class TrainingData():
         self.enconder = None
         self.label_encoder = None
 
-        
+        # Atributos de Redes Neuronales
+        self.X_val = None
+        self.y_val = None
+        self.X_test_NN = None
+        self.y_test_NN = None
+
     # Recibe dos listas en donde una son los nombres de las columnas descriptivas y la otra de las columnas objetivo
     def make_split(
     self, DESCRIPTIVE: list, OBJECTIVE: list, TEST_SIZE: float, objective_type: str):
@@ -58,6 +63,22 @@ class TrainingData():
 
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
             X, y, stratify=stratify_param, random_state=SPLIT_SEED, test_size=TEST_SIZE
+        )
+
+    def make_NN_splits(self, val_ratio: float = 0.5, objective_type: str = "classification"):
+        # Validación de seguridad para asegurar que make_split() se ejecutó antes
+        if self.X_test is None or self.y_test is None:
+            raise RuntimeError("Primero debes llamar a make_split() antes de crear los splits de la red neuronal.")
+
+        # Mantener la estratificación si es clasificación
+        stratify_param = None if objective_type.strip().lower() == "regression" else self.y_test
+
+        self.X_val, self.X_test_NN, self.y_val, self.y_test_NN = train_test_split(
+            self.X_test,
+            self.y_test,
+            stratify=stratify_param,
+            random_state=SPLIT_SEED,
+            test_size=(1 - val_ratio)  # 0.5 deja 50% para validación y 50% para test_NN
         )
 
     # Escala las variables numéricas de X_train y X_test.
