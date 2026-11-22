@@ -134,15 +134,11 @@ def NNC(Data_Structure: TrainingData, optimize:bool = True):
     n_columnas = ds.X_train.shape[1]
 
     # Crear separación de validación
-    ds.make_NN_splits()
-    if ds.scaler is None:
-        ds.scale_data(scaler_type="std")
+    if ds.X_val is None:
+        ds.make_NN_splits()
     
-    escalar = StandardScaler()
-
-    X_train = ds.X_train
-    X_val_s = escalar.transform(ds.X_val)
-    X_test_s = escalar.transform(ds.X_test_NN)
+    X_train_s = ds.X_train_scaled
+    X_val_s = ds.X_val
 
     if not optimize:
         NN_params = load_params()['classification']['NeuralNetwork']
@@ -152,8 +148,8 @@ def NNC(Data_Structure: TrainingData, optimize:bool = True):
 
         # sección de capas ocultas
         layers = NN_params["hidden_layer_sizes"]
-        for i in range(len(layers)):
-            model.add(Dense(layers[i], activation=NN_params["activation"]))
+        for neurons in layers:
+            model.add(Dense(neurons, activation=NN_params["activation"]))
 
         # capa de salida
         model.add(Dense(1, activation="sigmoid"))
@@ -166,7 +162,7 @@ def NNC(Data_Structure: TrainingData, optimize:bool = True):
         
         # entrenamiento del modelo
         history = model.fit(
-            X_train,
+            X_train_s,
             ds.y_train,
             epochs= NN_params["max_iter"],
             validation_data=(X_val_s, ds.y_val),
@@ -194,7 +190,7 @@ def NNC(Data_Structure: TrainingData, optimize:bool = True):
                         metrics = ["acuracy"])
         
         history = model.fit(
-                    X_train,
+                    X_train_s,
                     ds.y_train,
                     epochs= 100,
                     validation_data=(X_val_s, ds.y_val),
@@ -203,7 +199,7 @@ def NNC(Data_Structure: TrainingData, optimize:bool = True):
         )
 
         return model, history
-
+    
     
 def run_classifications(Data_Structure:TrainingData):
     # TO DO:

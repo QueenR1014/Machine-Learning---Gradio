@@ -55,3 +55,74 @@ def SVR(Data_Structure: TrainingData, optimize: bool = True):
 
         Grid.fit(Data_Structure.X_train_scaled, Data_Structure.y_train)
         return Grid.best_estimator_
+
+def NNR(Data_Structure: TrainingData, optimize: bool = True):
+
+    # print(10*"#" + " ENTRENANDO NEURAL NETWORK REGRESSION " + 10*"#")
+
+    if Data_Structure.scaler is None:
+        raise RuntimeError(f"Primero debes llamar a TrainingData.scale()")
+
+     # Fijamos semilla para reproductibilidad
+    np.random.seed(2)
+
+    ds = Data_Structure
+    n_columnas = ds.X_train.shape[1]
+
+    # Crear separación de validación
+    if ds.X_val is None:
+        ds.make_NN_splits()
+    
+    X_train_s = ds.X_train_scaled
+    X_val_s = ds.X_val
+
+    if not optimize:
+        NN_params = load_params()['regression']['NeuralNetwork']
+
+        model = Sequential()
+        model.add(Input(shape=(n_columnas,)))
+
+        # Inserción de capas ocultas
+        layers = NN_params['hidden_layer_sizes']
+        for neurons in layers:
+            model.add(Dense(neurons, activation=NN_params['activation']))
+
+        # Salida de regresión
+        model.add(Dense(1,activation='linear'))
+
+        model.compile(loss='mse',       # regresión
+              optimizer='adam',
+              metrics=['mae'])  # regresión
+
+        # Entrenar el modelo usando el conjunto de validación explícitamente
+        history = model.fit(X_train_s,
+                            ds.y_train,
+                            epochs=NN_params['max_iter'],
+                            validation_data=(X_val_s, ds.y_val),
+                            verbose=0,
+                            callbacks=[TqdmCallback()] )
+        return model, history
+    if optimize:
+
+        model = Sequential()
+        # número de entradas
+        model.add(Input(shape=(n_columnas,)))
+
+        #capas ocultas
+        model.add(Dense(16, activation='relu'))
+        model.add(Dense(1, activation='linear'))    # Para regresión
+
+        #modelo de redes neuronales
+        # Compilar el modelo
+        model.compile(loss='mse',       # regresión
+                    optimizer='adam',
+                    metrics=['mae'])  # regresión
+
+        # Entrenar el modelo usando el conjunto de validación explícitamente
+        history = model.fit(X_train_s,
+                            ds.y_train,
+                            epochs=50,
+                            validation_data=(X_val_s, ds.y_val),
+                            verbose=0,
+                            callbacks=[TqdmCallback()] )
+        return model, history

@@ -67,14 +67,14 @@ class TrainingData():
 
     def make_NN_splits(self, val_ratio: float = 0.5, objective_type: str = "classification"):
         # Validación de seguridad para asegurar que make_split() se ejecutó antes
-        if self.X_test is None or self.y_test is None:
-            raise RuntimeError("Primero debes llamar a make_split() antes de crear los splits de la red neuronal.")
+        if self.X_test_scaled is None:
+            raise RuntimeError("Primero debes llamar a scale_data() antes de crear los splits de la red neuronal.")
 
         # Mantener la estratificación si es clasificación
         stratify_param = None if objective_type.strip().lower() == "regression" else self.y_test
 
         self.X_val, self.X_test_NN, self.y_val, self.y_test_NN = train_test_split(
-            self.X_test,
+            self.X_test_scaled,
             self.y_test,
             stratify=stratify_param,
             random_state=SPLIT_SEED,
