@@ -23,8 +23,9 @@ DIR_MODELOS = RESULTADOS / "modelos"
 DIR_METRICAS = RESULTADOS / "metricas"
 DIR_GRAFICAS = RESULTADOS / "graficas"
 
-# Llaves del diccionario de run_classifications -> formato en que se guarda cada modelo
+# Llaves de los diccionarios de run_classifications / run_regressions -> formato en que se guarda cada modelo
 MODELOS_CLF = {"LogReg": "joblib", "RandForest": "joblib", "NNC": "keras"}
+MODELOS_REG = {"LinearReg": "joblib", "SVR": "joblib", "NNR": "keras"}
 
 
 def construir_estructura(objective_type: str = "classification", ruta=RUTA_LIMPIOS,
@@ -38,37 +39,41 @@ def construir_estructura(objective_type: str = "classification", ruta=RUTA_LIMPI
 
 
 def train_all_models(ruta=RUTA_LIMPIOS, test_size: float = TEST_SIZE, desde_crudos: bool = False,
-                     optimize: bool = True):
+                     optimize: bool = False) -> dict:
     """
-    Entrena todos los modelos y exporta los resultados.
-    Por defecto usa data/datos_limpios.csv. Con desde_crudos=True primero limpia
-    data/datos_crudos.csv y sobrescribe datos_limpios.csv.
-    optimize=True usa GridSearchCV (tarda varios minutos); optimize=False usa model_cfg.json.
-    Retorna la tabla de métricas de clasificación.
+    Entrena todos los modelos (clasificación y regresión) y exporta los resultados a resultados/.
+    - ruta: datos limpios (por defecto data/datos_limpios.csv).
+    - desde_crudos=True: primero limpia data/datos_crudos.csv y sobrescribe datos_limpios.csv.
+    - optimize=False (por defecto): parámetros de model_cfg.json.
+      optimize=True: búsqueda de hiperparámetros (solo cuando el usuario modifica los parámetros).
+    Retorna {"clasificacion": tabla de métricas, "regresion": tabla de métricas}.
     """
     if desde_crudos:
         guardar_limpios(clean_data(cargar_crudos()), ruta)
 
+    # Imports aquí: cargan TensorFlow (lento) y así el resto del módulo se puede usar sin él
+    from models.classificationModels import run_classifications
+    from models.regressionModels import run_regressions
+
     # ---- Clasificación ----
     ds_clf = construir_estructura("classification", ruta, test_size)
-
-    # Import aquí: carga TensorFlow (lento) y así el resto del módulo se puede usar sin él
-    from models.classificationModels import run_classifications
-    resultado = run_classifications(ds_clf, optimize=optimize)
-    if resultado is None:
-        raise RuntimeError("run_classifications todavía no retorna (modelos, predicciones).")
-    modelos_clf, predicciones_clf = resultado
+    modelos_clf, predicciones_clf = run_classifications(ds_clf, optimize=optimize)
 
     metricas_clf = calcular_metricas_clasificacion(ds_clf, predicciones_clf)
     guardar_modelos(modelos_clf, ds_clf.scaler, "clf")
     guardar_metricas(metricas_clf, predicciones_clf, ds_clf, "clasificacion")
     guardar_graficas_clasificacion(ds_clf, predicciones_clf)
 
-    # ---- Regresión (pendiente: modelos de Reina) ----
-    # ds_reg = construir_estructura("regression", ruta, test_size)
-    # modelos_reg, predicciones_reg = run_regression(ds_reg)
+    # ---- Regresión ----
+    ds_reg = construir_estructura("regression", ruta, test_size)
+    modelos_reg, predicciones_reg = run_regressions(ds_reg, optimize=optimize)
 
-    return metricas_clf
+    metricas_reg = calcular_metricas_regresion(ds_reg, predicciones_reg)
+    guardar_modelos(modelos_reg, ds_reg.scaler, "reg")
+    guardar_metricas(metricas_reg, predicciones_reg, ds_reg, "regresion")
+    guardar_graficas_regresion(ds_reg, predicciones_reg)
+
+    return {"clasificacion": metricas_clf, "regresion": metricas_reg}
 
 
 # ---------------- Exportación ----------------
@@ -84,6 +89,14 @@ def calcular_metricas_clasificacion(ds: TrainingData, predicciones: dict) -> pd.
     filas = [{"Modelo": NOMBRES.get(key, key), **classification_metrics(ds.y_test, pred)}
              for key, pred in predicciones.items()]
     return pd.DataFrame(filas).round(3)
+
+
+def calcular_metricas_regresion(ds: TrainingData, predicciones: dict) -> pd.DataFrame:
+    """R², MSE, RMSE y MAE de cada modelo sobre el mismo conjunto de prueba."""
+    from models.regressionModels import regression_metrics, NOMBRES
+    filas = [{"Modelo": NOMBRES.get(key, key), **regression_metrics(ds.y_test, pred)}
+             for key, pred in predicciones.items()]
+    return pd.DataFrame(filas).round(4)
 
 
 def guardar_modelos(modelos: dict, scaler, sufijo: str):
@@ -123,45 +136,74 @@ def guardar_graficas_clasificacion(ds: TrainingData, predicciones: dict):
     plt.close(fig)
 
 
+def guardar_graficas_regresion(ds: TrainingData, predicciones: dict):
+    from models.regressionModels import NOMBRES, regression_metrics
+    _crear_carpetas()
+    y = ds.y_test.to_numpy()
+    lim = [y.min() - 5, y.max() + 5]
+    colores = ["#4f46e5", "#2a9d8f", "#f4a261"]
+    fig, axes = plt.subplots(1, len(predicciones), figsize=(5 * len(predicciones), 4.8))
+    for ax, (key, pred), color in zip(axes, predicciones.items(), colores):
+        ax.scatter(y, pred, s=10, alpha=0.5, color=color)
+        ax.plot(lim, lim, "r--", linewidth=1.5)
+        ax.set_title(f"{NOMBRES.get(key, key)}\nR² = {regression_metrics(y, pred)['R2']:.4f}", fontweight="bold")
+        ax.set_xlabel("Consumo real (kWh)")
+        ax.set_ylabel("Consumo predicho (kWh)")
+    fig.suptitle("Consumo real vs predicho (conjunto de prueba)", fontsize=14, fontweight="bold")
+    fig.tight_layout()
+    fig.savefig(DIR_GRAFICAS / "real_vs_predicho.png", dpi=120, bbox_inches="tight")
+    plt.close(fig)
+
+
 # ---------------- Carga (para la app) ----------------
 
-def _archivos_clasificacion():
-    archivos = [DIR_MODELOS / f"{key}.{ext}" for key, ext in MODELOS_CLF.items()]
-    archivos += [DIR_MODELOS / "scaler_clf.joblib", DIR_METRICAS / "metricas_clasificacion.csv"]
+TAREAS = {
+    "clasificacion": {"modelos": MODELOS_CLF, "sufijo": "clf", "graficas": ["matrices_confusion"]},
+    "regresion": {"modelos": MODELOS_REG, "sufijo": "reg", "graficas": ["real_vs_predicho"]},
+}
+
+
+def _archivos(tarea: str) -> list:
+    t = TAREAS[tarea]
+    archivos = [DIR_MODELOS / f"{key}.{ext}" for key, ext in t["modelos"].items()]
+    archivos += [DIR_MODELOS / f"scaler_{t['sufijo']}.joblib",
+                 DIR_METRICAS / f"metricas_{tarea}.csv",
+                 DIR_METRICAS / f"predicciones_{tarea}.csv"]
+    archivos += [DIR_GRAFICAS / f"{g}.png" for g in t["graficas"]]
     return archivos
 
 
 def modelos_listos() -> bool:
-    """True si están todos los archivos que guarda train_all_models para clasificación."""
-    return all(f.is_file() for f in _archivos_clasificacion())
+    """True si están todos los archivos que guarda train_all_models (clasificación y regresión)."""
+    return all(f.is_file() for tarea in TAREAS for f in _archivos(tarea))
 
 
 def cargar_resultados() -> dict:
     """Carga de resultados/ lo necesario para la app, sin volver a entrenar."""
-    if not modelos_listos():
-        faltan = [f.name for f in _archivos_clasificacion() if not f.is_file()]
+    faltan = [f.name for tarea in TAREAS for f in _archivos(tarea) if not f.is_file()]
+    if faltan:
         raise FileNotFoundError(f"No hay modelos entrenados (faltan {faltan}). Corre train_all_models().")
 
-    modelos = {}
-    for key, ext in MODELOS_CLF.items():
-        ruta = DIR_MODELOS / f"{key}.{ext}"
-        if ext == "keras":
-            import keras
-            modelos[key] = keras.models.load_model(ruta)
-        else:
-            modelos[key] = joblib.load(ruta)
-
-    return {
-        "clasificacion": {
-            "modelos": modelos,           # NNC se carga solo como modelo (sin history)
-            "scaler": joblib.load(DIR_MODELOS / "scaler_clf.joblib"),
-            "metricas": pd.read_csv(DIR_METRICAS / "metricas_clasificacion.csv"),
-            "predicciones": pd.read_csv(DIR_METRICAS / "predicciones_clasificacion.csv", index_col="indice"),
-            "graficas": {"matrices_confusion": DIR_GRAFICAS / "matrices_confusion.png"},
-        },
-        # "regresion": pendiente (modelos de Reina)
-    }
+    resultados = {}
+    for tarea, t in TAREAS.items():
+        modelos = {}
+        for key, ext in t["modelos"].items():
+            ruta = DIR_MODELOS / f"{key}.{ext}"
+            if ext == "keras":
+                import keras
+                modelos[key] = keras.models.load_model(ruta)   # solo el modelo, sin history
+            else:
+                modelos[key] = joblib.load(ruta)
+        resultados[tarea] = {
+            "modelos": modelos,
+            "scaler": joblib.load(DIR_MODELOS / f"scaler_{t['sufijo']}.joblib"),
+            "metricas": pd.read_csv(DIR_METRICAS / f"metricas_{tarea}.csv"),
+            "predicciones": pd.read_csv(DIR_METRICAS / f"predicciones_{tarea}.csv", index_col="indice"),
+            "graficas": {g: DIR_GRAFICAS / f"{g}.png" for g in t["graficas"]},
+        }
+    return resultados
 
 
 if __name__ == "__main__":
-    print(train_all_models())
+    for tarea, tabla in train_all_models().items():
+        print(f"\n{tarea}\n{tabla.to_string(index=False)}")

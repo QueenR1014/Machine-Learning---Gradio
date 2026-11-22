@@ -161,7 +161,7 @@ def NNC(Data_Structure: TrainingData, optimize:bool = True):
         NN_params = load_params()['classification']['NeuralNetwork']
 
         model = Sequential()
-        model.add(Input(shape=n_columnas,))
+        model.add(Input(shape=(n_columnas,)))
 
         # sección de capas ocultas
         layers = NN_params["hidden_layer_sizes"]
@@ -172,10 +172,10 @@ def NNC(Data_Structure: TrainingData, optimize:bool = True):
         model.add(Dense(1, activation="sigmoid"))
 
         # compilador / optimizador
-        optimizador = "binary_crossentropy" if ds.y.shape[1] == 1 else "categorical_crossentropy" 
+        optimizador = "binary_crossentropy"
         model.compile(loss=optimizador,
                       optimizer=NN_params["solver"],
-                      metrics = ["acuracy"])
+                      metrics = ["accuracy"])
         
         # entrenamiento del modelo
         history = model.fit(
@@ -190,7 +190,7 @@ def NNC(Data_Structure: TrainingData, optimize:bool = True):
         return model, history
     if optimize:
         model = Sequential()
-        model.add(Input(shape=n_columnas,))
+        model.add(Input(shape=(n_columnas,)))
 
         # Solo usaremos 3 capas ocultas
         model.add(Dense(16,activation="relu"))
@@ -201,10 +201,10 @@ def NNC(Data_Structure: TrainingData, optimize:bool = True):
         model.add(Dense(1, activation="sigmoid"))
 
         # compilador / optimizador
-        optimizador = "binary_crossentropy" if ds.y.shape[1] == 1 else "categorical_crossentropy" 
+        optimizador = "binary_crossentropy"
         model.compile(loss=optimizador,
                         optimizer="adam",
-                        metrics = ["acuracy"])
+                        metrics = ["accuracy"])
         
         history = model.fit(
                     X_train_s,

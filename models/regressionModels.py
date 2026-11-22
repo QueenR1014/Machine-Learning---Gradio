@@ -3,7 +3,8 @@ import numpy as np
 from models.dataManagement import TrainingData, load_params
 
 from sklearn.linear_model import LinearRegression
-from sklearn.svm import SVR
+from sklearn.svm import SVR as SVRModel
+from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
 
 from sklearn.model_selection import  GridSearchCV
 
@@ -15,6 +16,30 @@ VALID_LINREG_PARAMS = []
 VALID_SVR_PARAMS = ["kernel", "C", "epsilon", "gamma"]
 VALID_NNR_PARAMS = []
 
+NOMBRES = {
+    "LinearReg": "Regresión lineal",
+    "SVR": "SVR",
+    "NNR": "Red neuronal",
+}
+
+
+def regression_metrics(y_true, y_pred) -> dict:
+    mse = mean_squared_error(y_true, y_pred)
+    return {
+        "R2": r2_score(y_true, y_pred),
+        "MSE": mse,
+        "RMSE": np.sqrt(mse),
+        "MAE": mean_absolute_error(y_true, y_pred),
+    }
+
+
+def predecir_consumo(modelo, X) -> np.ndarray:
+    if isinstance(modelo, tuple):
+        modelo = modelo[0]
+    if hasattr(modelo, "get_params"):
+        return np.asarray(modelo.predict(X)).ravel()
+    return np.asarray(modelo.predict(np.asarray(X, dtype="float32"), verbose=0)).ravel()
+
 
 def LinearReg(Data_Structure: TrainingData):
     # PARA ESTE MODELO NO HAY OPTIMIZACIÓN PORQUE RESOLVEMOS POR OLS
@@ -23,7 +48,7 @@ def LinearReg(Data_Structure: TrainingData):
         raise RuntimeError("Primero debes llamar a TrainingData.make_split()")
 
     modelo = LinearRegression()
-    modelo.fit(Data_Structure.X_train, Data_Structure.y_train)
+    modelo.fit(Data_Structure.X_train_scaled, Data_Structure.y_train)
     return modelo
 
 def SVR(Data_Structure: TrainingData, optimize: bool = True):
@@ -34,11 +59,11 @@ def SVR(Data_Structure: TrainingData, optimize: bool = True):
     if not optimize:
         raw_params = load_params()['regression']['SVR']
         SVR_params = {k:v for k,v in raw_params.items() if k in VALID_SVR_PARAMS}
-        modelo = SVR(**SVR_params)
+        modelo = SVRModel(**SVR_params)
         modelo.fit(Data_Structure.X_train_scaled, Data_Structure.y_train)
         return modelo
     elif optimize:
-        modelo = SVR()
+        modelo = SVRModel()
         grid_params = {
             "kernel": ["rbf", "linear", "poly"],
             "C": [0.1, 1, 10, 100],
@@ -71,7 +96,7 @@ def NNR(Data_Structure: TrainingData, optimize: bool = True):
 
     # Crear separación de validación
     if ds.X_val is None:
-        ds.make_NN_splits()
+        ds.make_NN_splits(objective_type="regression")
     
     X_train_s = ds.X_train_scaled
     X_val_s = ds.X_val
@@ -126,3 +151,21 @@ def NNR(Data_Structure: TrainingData, optimize: bool = True):
                             verbose=0,
                             callbacks=[TqdmCallback()] )
         return model, history
+
+
+def run_regressions(Data_Structure: TrainingData, optimize: bool = True):
+    # Entrena y predice con cada uno de los modelos de regresión sobre el mismo split.
+    # Retorna:
+    #   modelos:      {"LinearReg": modelo, "SVR": modelo, "NNR": (model, history)}
+    #   predicciones: {"LinearReg": array, "SVR": array, "NNR": array} en kWh sobre ds.X_test_scaled
+    ds = Data_Structure
+
+    modelos = {
+        "LinearReg": LinearReg(Data_Structure=ds),
+        "SVR": SVR(Data_Structure=ds, optimize=optimize),
+        "NNR": NNR(Data_Structure=ds, optimize=optimize)
+    }
+
+    predicciones = {key: predecir_consumo(modelo, ds.X_test_scaled) for key, modelo in modelos.items()}
+
+    return modelos, predicciones
