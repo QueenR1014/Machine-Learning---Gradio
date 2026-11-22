@@ -111,6 +111,7 @@ class TrainingData():
             self.X_train_scaled[num_cols] = self.scaler.fit_transform(self.X_train[num_cols])
             self.X_test_scaled[num_cols] = self.scaler.transform(self.X_test[num_cols])
 
+
     def cathegorize_data(self):
         pass
 

@@ -5,12 +5,13 @@ import numpy as np
 from dataManagement import TrainingData, load_params
 
 from sklearn.model_selection import  GridSearchCV
-
+from sklearn.preprocessing import StandardScaler
 
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import confusion_matrix, accuracy_score, recall_score, precision_score, f1_score
+
 
 import tensorflow as tf
 from keras.models    import Sequential
@@ -23,7 +24,7 @@ from tqdm.keras                 import TqdmCallback
 # Parámetros válidos para los modelos
 VALID_LOGREG_PARAMS = ["C", "solver", "max_iter", "penalty"]
 VALID_RANDFOREST_PARAMS = ["n_estimators", "criterion", "max_depth", "min_samples_split","min_samples_leaf","max_features","bootstrap","random_state"]
-VALID_NNC_PARAMS = []
+VALID_NNC_PARAMS = ["hidden_layer_sizes", "activation", "solver", "alpha", "max_iter"]
 
 NOMBRES = {
     "LogReg": "Regresión logística",
@@ -140,7 +141,47 @@ def NNC(Data_Structure: TrainingData, optimize:bool = True):
     n_columnas = ds.X_train.shape[1]
 
     # Crear separación de validación
+    ds.make_NN_splits()
+    if ds.scaler is None:
+        ds.scale_data(scaler_type="std")
+    
+    escalar = StandardScaler()
 
+    X_train = ds.X_train
+    X_val_s = escalar.transform(ds.X_val)
+    X_test_s = escalar.transform(ds.X_test_NN)
+
+    if not optimize:
+        NN_params = load_params()['classification']['NeuralNetwork']
+
+        model = Sequential()
+        model.add(Input(shape=n_columnas,))
+
+        # sección de capas ocultas
+        layers = NN_params["hidden_layer_sizes"]
+        for i in range(len(layers)):
+            model.add(Dense(layers[i], activation=NN_params["activation"]))
+
+        # capa de salida
+        model.add(Dense(1, activation="sigmoid"))
+
+        # compilador / optimizador
+        optimizador = "binary_crossentropy" if ds.y.shape[1] == 1 else "categorical_crossentropy" 
+        model.compile(loss=optimizador,
+                      optimizer=NN_params["solver"],
+                      metrics = ["acuracy"])
+        
+        # entrenamiento del modelo
+        history = model.fit(
+            X_train,
+            ds.y_train,
+            epochs= NN_params["max_iter"],
+            validation_data=(X_val_s, ds.y_val),
+            verbose=0,
+            callbacks=[TqdmCallback()]
+        )
+
+        return model, history
 def run_classifications(Data_Structure:TrainingData):
     # función que entrena y predice con cada uno de los modelos de clasificación
     # retorna los modelos entrenados, las predicciones del data split, y las métricas (accuracy, recall, specificity, precision, f1-score)
